@@ -20,33 +20,29 @@ class BaseNetwork(Chain):
             raise Exception("Net must have hidden layers")
         layers = [L.Linear(num_input_nodes, hidden_layers[0])];
         for i in range(0, len(hidden_layers)-1):
-            print hidden_layers[i]
-            print hidden_layers[i+1]
             layers.append(L.Linear(hidden_layers[i], hidden_layers[i+1]))
         layers.append(L.Linear(hidden_layers[-1], num_exit_nodes))
         super(BaseNetwork, self).__init__(
-            l1 = layers[0],
-            l2 = layers[1]
+            l0 = layers[0],
+            l1 = layers[1]
         );
         for i in range(2, len(layers)):
-            super(BaseNetwork, self).add_link(i, layers[i])
+            super(BaseNetwork, self).add_link(str(i), layers[i])
 
     """Call the network -- given x (an input vector), call each layer and return
      the final result."""
     def __call__(self, x):
-        h1 = F.relu(self.l1(x))
-        h2 = F.relu(self.l2(h1))
-        h3 = F.relu(self.l3(h2))
-        h4 = F.relu(self.l4(h3))
-        y = self.l5(h2)
-        return y
+        layer_result = x
+        for layer in self.children():
+            layer_result = F.relu(layer(layer_result))
+        return layer_result
 
 class ClassificationTrainer(object):
     """Train a classifier on some labeled data.
     """
-    def __init__(self, data, target, nn_size, model_filename="", optimizer_filename=""):
+    def __init__(self, data, target, hidden_layers, model_filename="", optimizer_filename=""):
         """ Must submit either a net configuration, or something to load from """
-        if nn_sizes == [] and model_filename == "":
+        if hidden_layers == [] and model_filename == "":
             raise Exception("Must provide a net configuration or a file to load from")
 
         """ Divide the data into training and test """
@@ -57,7 +53,7 @@ class ClassificationTrainer(object):
 
         """ Create the underlying neural network model """
         print set(target)
-        self.model = L.Classifier(BaseNetwork(len(data[0]), nn_sizes, len(set(target))))
+        self.model = L.Classifier(BaseNetwork(len(data[0]), hidden_layers, len(set(target))))
         if (model_filename != ""):
             serializers.load_hdf5(model_filename, self.model)
 
