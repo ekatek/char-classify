@@ -1,6 +1,5 @@
 """ Classify the output based on the choice neuron in the last layer with the highest probability."""
 import numpy as np
-#import chainer
 
 from chainer import cuda, Variable, Chain, optimizers, serializers
 import chainer.links as L

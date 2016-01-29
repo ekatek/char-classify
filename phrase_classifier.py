@@ -1,7 +1,6 @@
-from classify import ClassificationTrainer
+from base_classifier import ClassificationTrainer
 import numpy as np
 import os
-from chainer import cuda
 
 
 def readFileIntoArray(filename):
