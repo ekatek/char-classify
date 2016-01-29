@@ -52,7 +52,6 @@ class ClassificationTrainer(object):
         self.y_train, self.y_test = np.split(target, [self.trainsize])
 
         """ Create the underlying neural network model """
-        print set(target)
         self.model = L.Classifier(BaseNetwork(len(data[0]), hidden_layers, len(set(target))))
         if (model_filename != ""):
             serializers.load_hdf5(model_filename, self.model)
@@ -74,7 +73,7 @@ class ClassificationTrainer(object):
                 t = Variable(self.y_train[indexes[i: i + batchsize]])
                 self.optimizer.update(self.model, x, t)
 
-    def eval(self, batchsize):
+    def evaluate(self, batchsize):
         """Evaluate how well the classifier is doing. Return mean loss and mean accuracy"""
         sum_loss, sum_accuracy = 0, 0
         for i in range(0, self.testsize, batchsize):
@@ -92,8 +91,8 @@ class ClassificationTrainer(object):
         serializers.save_hdf5(optimizer_filename, self.optimizer)
 
 
-    def classify(self, vector):
+    def classify(self, phrase_vector):
         """ Run this over a phrase and see the result """
         # XXX: this is kind of a hack.
-        x = Variable(np.asarray([vector]))
-        return self.model.predictor(x).data
+        x = Variable(np.asarray([phrase_vector]))
+        return self.model.predictor(x).data[0]
