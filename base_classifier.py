@@ -14,13 +14,12 @@ class BaseNetwork(Chain):
        - hidden_layers: An array of ints, corresponding to number of neurons in each layer.
        - choices: Total number of possible choices.
     """
-    def __init__(self, num_input_nodes, hidden_layers, num_exit_nodes):
-        if len(hidden_layers) == 0:
-            raise Exception("Net must have hidden layers")
-        layers = [L.Linear(num_input_nodes, hidden_layers[0])];
-        for i in range(0, len(hidden_layers)-1):
-            layers.append(L.Linear(hidden_layers[i], hidden_layers[i+1]))
-        layers.append(L.Linear(hidden_layers[-1], num_exit_nodes))
+    def __init__(self, sizes):
+        if len(sizes) < 2:
+            raise Exception("Net must have input and output layers")
+        layers = [];
+        for i in range(0, len(sizes)-1):
+            layers.append(L.Linear(sizes[i], sizes[i+1]))
         super(BaseNetwork, self).__init__(
             l0 = layers[0],
             l1 = layers[1]
@@ -39,7 +38,7 @@ class BaseNetwork(Chain):
 class ClassificationTrainer(object):
     """Train a classifier on some labeled data.
     """
-    def __init__(self, data, target, hidden_layers, model_filename="", optimizer_filename=""):
+    def __init__(self, data, target, hidden_layers):
         """ Must submit either a net configuration, or something to load from """
         if hidden_layers == [] and model_filename == "":
             raise Exception("Must provide a net configuration or a file to load from")
@@ -51,16 +50,14 @@ class ClassificationTrainer(object):
         self.y_train, self.y_test = np.split(target, [self.trainsize])
 
         """ Create the underlying neural network model """
-        self.model = L.Classifier(BaseNetwork(len(data[0]), hidden_layers, len(set(target))))
-        if (model_filename != ""):
-            serializers.load_hdf5(model_filename, self.model)
+        self.sizes = [len(data[0])]
+        self.sizes.extend(hidden_layers)
+        self.sizes.append(len(set(target)))
+        self.model = L.Classifier(BaseNetwork(self.sizes))
 
         """ Create the underlying optimizer """
         self.optimizer = optimizers.Adam()
         self.optimizer.setup(self.model)
-        if (optimizer_filename != ""):
-            serializers.load_hdf5(optimizer_filename, self.optimizer)
-
 
     def learn(self, numEpochs, batchsize):
         """Train the classifier for a given number of epochs, with a given batchsize"""
@@ -90,8 +87,21 @@ class ClassificationTrainer(object):
         serializers.save_hdf5(optimizer_filename, self.optimizer)
 
 
+class Classifier(object):
+    """ Load a state from disk, and use it to classify submissions"""
+    def __init__(self, net_size, model_filename, optimizer_filename):
+        """ Create the underlying neural network model """
+        self.model = L.Classifier(BaseNetwork(net_size))
+        if (model_filename != ""):
+            serializers.load_hdf5(model_filename, self.model)
+
+        """ Create the underlying optimizer """
+        self.optimizer = optimizers.Adam()
+        self.optimizer.setup(self.model)
+        if (optimizer_filename != ""):
+            serializers.load_hdf5(optimizer_filename, self.optimizer)
+
     def classify(self, phrase_vector):
-        """ Run this over a phrase and see the result """
-        # XXX: this is kind of a hack.
+        """ Run this over an input vector and see the result """
         x = Variable(np.asarray([phrase_vector]))
         return self.model.predictor(x).data[0]
