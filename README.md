@@ -12,7 +12,7 @@ p.train([100, 100], 20, 100)
 p.save("sample", "example-run")
 ```
 
-... and, having done that, to run:
+To use the result, run:
 
 ```
 k = PhraseClassifier("sample", "example-run")
