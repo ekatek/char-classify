@@ -71,15 +71,20 @@ class PhraseClassificationTrainer(object):
         return self.trainer.evaluate(batchsize)
 
     def classify(self, phrase, cut_to_len=True):
+      """ Classify a phrase based on the model. (See corresponding function in PhraseClassifier).
+          Provided here mostly to help verify that a created model is worth saving. Technically, the
+          results of the training should be enough for that, but it is good to be able to run it on concrete
+          examples.
+      """
       if (len(phrase) > self.max_phrase_len):
           if not cut_to_len:
               raise Exception("Phrase too long.")
           phrase = phrase[0:self.max_phrase_len]
       if (self.trainer == None):
           raise Exception("Must train the classifier at least once before classifying")
-
-      ### XXX Use target dict to return something reasonable
-      return self.trainer.classify(stringToVector(phrase, self.vocab, self.max_vector_len))
+ 
+      numbers = self.trainer.classify(stringToVector(phrase, self.vocab, self.max_vector_len))
+      return zip(self.targetTranslate, numbers)
 
     def save(self, directory, label):
        if (self.trainer == None):
@@ -115,6 +120,7 @@ class PhraseClassifier(object):
            self.max_vector_len = all_vars["max_vector_len"]
            self.max_phrase_len = all_vars["max_phrase_len"]
            self.net_sizes = all_vars["sizes"]
+           self.targets = all_vars["targets"]
 
        model_filename = os.path.join(directory, label + ".model")
        state_filename = os.path.join(directory, label + ".state")
@@ -129,4 +135,5 @@ class PhraseClassifier(object):
               raise Exception("Phrase too long.")
           phrase = phrase[0:self.max_phrase_len]
 
-      return self.classifier.classify(stringToVector(phrase, self.vocab, self.max_vector_len))
+      numbers = self.classifier.classify(stringToVector(phrase, self.vocab, self.max_vector_len))
+      return zip(self.targets, numbers)
