@@ -20,3 +20,12 @@ This will save a trained model with the tag 'example-run' in the sample director
 k = PhraseClassifier("sample", "example-run")
 print k.classify("dog")
 ```
+
+This will return an array of tuples of original label + likelyhood that the label is correct, like so:
+
+```
+>> print k.classify("dog")
+[(u'VB', 0.050349433), (u'NN', 3.8027303)]
+```
+
+The higher the number, the more sure we are of the classification (`dog` is definitely a noun, for example, and probably not a verb). 
