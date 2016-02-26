@@ -36,8 +36,8 @@ class PhraseClassificationTrainer(object):
         raw_targets = readFileIntoArray(target_file)
 
         """ Initialize the underlying vocabulary by assigning vectors to letters """
-        base_vocab = "!abcdefghijklmnopqrstuvwqxyz' " # Maybe generate this procedurally
-        self.vocab = generateVocabVectors(base_vocab)
+        self.base_vocab = "!abcdefghijklmnopqrstuvwqxyz' " # Maybe generate this procedurally
+        self.vocab = generateVocabVectors(self.base_vocab)
 
         """ Convert the targets to a vector """
         self.targetTranslate = set(raw_targets)
@@ -53,7 +53,7 @@ class PhraseClassificationTrainer(object):
         for phrase in raw_data:
             if (len(phrase) > self.max_phrase_len):
                 self.max_phrase_len = len(phrase)
-        self.max_vector_len = self.max_phrase_len * len(base_vocab)
+        self.max_vector_len = self.max_phrase_len * len(self.base_vocab)
 
         """ Convert data to vectors """
         k = []
@@ -78,7 +78,7 @@ class PhraseClassificationTrainer(object):
       if (self.trainer == None):
           raise Exception("Must train the classifier at least once before classifying")
 
-      ### XXXX Use target dict to return something reasonable
+      ### XXX Use target dict to return something reasonable
       return self.trainer.classify(stringToVector(phrase, self.vocab, self.max_vector_len))
 
     def save(self, directory, label):
@@ -91,12 +91,16 @@ class PhraseClassificationTrainer(object):
        state_filename = os.path.join(directory, label + ".state")
        self.trainer.save(model_filename, state_filename)
 
+       ### XXX We shouldn't need to save all of this information! Ideally, a lot of it
+       ### should be derivable from the base model. But we are going to want to save some things anyway
+       ### (ex: base_vocab, targets), so this is probably OK for now.
        save_file = {}
        save_file["max_vector_len"] = self.max_vector_len
        save_file["max_phrase_len"] = self.max_phrase_len
-       save_file["vocab"] = list(base_vocab)
+       save_file["vocab"] = list(self.base_vocab)
        save_file["sizes"] = self.trainer.sizes
-       other_filename = os.path.join(directory, label + ".other")
+       save_file["targets"] = list(self.targetTranslate)
+       other_filename = os.path.join(directory, label + "-meta.json")
        with open(other_filename, 'w') as v:
            v.write(json.dumps(save_file))
 
@@ -104,8 +108,8 @@ class PhraseClassificationTrainer(object):
 class PhraseClassifier(object):
     """ Classify a phrase based on a pre-existing model """
     def __init__(self, directory, label):
-       other_filename = os.path.join(directory, label + ".other")
-       with open(other_filename, 'r') as v:
+       metafile = os.path.join(directory, label + "-meta.json")
+       with open(metafile, 'r') as v:
            all_vars = json.load(v)
            self.vocab =  generateVocabVectors(all_vars["vocab"])
            self.max_vector_len = all_vars["max_vector_len"]
