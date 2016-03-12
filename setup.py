@@ -16,7 +16,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     # Project basic metadata
     name='chClassifier',
-    version='0.6.2',
+    version='0.6.4',
     description='Neural Network to classify short strings',
     long_description=long_description,
     url='https://github.com/ekatek/char-classify',
@@ -51,7 +51,7 @@ setup(
 
 
     # List run-time dependencies here.
-    install_requires= ['chainer', 'numpy'],
+    install_requires= ['chainer', 'numpy', 'h5py'],
 )
 
 

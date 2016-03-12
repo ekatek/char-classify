@@ -30,13 +30,13 @@ def generateVocabVectors(base_vocab):
 class PhraseClassificationTrainer(object):
     """Given a file of phrases and a file of targets, train a phrase classifier to
        recognize the phrases."""
-    def __init__(self, data_file, target_file):
+    def __init__(self, data_file, target_file, base_vocab='!abcdefghijklmnopqrstuvwqxyz'):
         """ Read in the raw data & targets """
         raw_data = readFileIntoArray(data_file)
         raw_targets = readFileIntoArray(target_file)
 
         """ Initialize the underlying vocabulary by assigning vectors to letters """
-        self.base_vocab = "!abcdefghijklmnopqrstuvwqxyz' " # Maybe generate this procedurally
+        self.base_vocab = base_vocab # Maybe generate this procedurally
         self.vocab = generateVocabVectors(self.base_vocab)
 
         """ Convert the targets to a vector """
